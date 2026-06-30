@@ -92,9 +92,41 @@ function fetch_item(int $id): ?array
     return $item ?: null;
 }
 
+function fetch_comments(int $itemId): array
+{
+    $stmt = get_pdo()->prepare(
+        'SELECT id, author_name, content, created_at
+         FROM item_comments
+         WHERE item_id = :item_id
+         ORDER BY created_at ASC, id ASC'
+    );
+    $stmt->execute(['item_id' => $itemId]);
+
+    return $stmt->fetchAll();
+}
+
 function has_length(string $value, int $maxLength): bool
 {
     return mb_strlen($value) <= $maxLength;
+}
+
+function validate_comment_payload(array $data): array
+{
+    $errors = [];
+
+    if ($data['author_name'] === '') {
+        $errors[] = '댓글 작성자 이름을 입력해 주세요.';
+    } elseif (!has_length($data['author_name'], 100)) {
+        $errors[] = '댓글 작성자 이름은 100자 이하로 입력해 주세요.';
+    }
+
+    if ($data['content'] === '') {
+        $errors[] = '댓글 내용을 입력해 주세요.';
+    } elseif (!has_length($data['content'], 1000)) {
+        $errors[] = '댓글 내용은 1000자 이하로 입력해 주세요.';
+    }
+
+    return $errors;
 }
 
 function validate_item_payload(array $data): array
@@ -126,6 +158,68 @@ function validate_item_payload(array $data): array
     }
 
     return $errors;
+}
+
+function upload_item_image(array $file): ?string
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('이미지 업로드 중 오류가 발생했습니다.');
+    }
+
+    $maxBytes = 3 * 1024 * 1024;
+    if (($file['size'] ?? 0) > $maxBytes) {
+        throw new RuntimeException('이미지는 3MB 이하로 업로드해 주세요.');
+    }
+
+    $tmpName = (string)($file['tmp_name'] ?? '');
+    if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+        throw new RuntimeException('업로드된 이미지 파일을 확인할 수 없습니다.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($tmpName) ?: '';
+    $extensions = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+    ];
+
+    if (!array_key_exists($mime, $extensions)) {
+        throw new RuntimeException('이미지는 JPG, PNG, WEBP, GIF 형식만 업로드할 수 있습니다.');
+    }
+
+    $uploadDir = __DIR__ . '/../uploads/items';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
+        throw new RuntimeException('이미지 저장 폴더를 만들 수 없습니다.');
+    }
+
+    $fileName = bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
+    $targetPath = $uploadDir . '/' . $fileName;
+
+    if (!move_uploaded_file($tmpName, $targetPath)) {
+        throw new RuntimeException('이미지 파일을 저장하지 못했습니다.');
+    }
+
+    chmod($targetPath, 0644);
+
+    return '/uploads/items/' . $fileName;
+}
+
+function delete_item_image(?string $imagePath): void
+{
+    if (!$imagePath || !str_starts_with($imagePath, '/uploads/items/')) {
+        return;
+    }
+
+    $fullPath = __DIR__ . '/..' . $imagePath;
+    if (is_file($fullPath)) {
+        unlink($fullPath);
+    }
 }
 
 function validate_password(?string $password): array

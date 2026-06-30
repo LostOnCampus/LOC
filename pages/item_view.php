@@ -6,6 +6,8 @@ require_once __DIR__ . '/../includes/functions.php';
 $pageTitle = '게시글 상세';
 $id = int_param('id');
 $item = null;
+$comments = [];
+$commentOld = pull_old_input();
 $errorMessage = null;
 
 try {
@@ -16,6 +18,7 @@ try {
     if (!$item) {
         throw new RuntimeException('Item not found.');
     }
+    $comments = fetch_comments($id);
 } catch (InvalidArgumentException | RuntimeException $e) {
     error_log($e->getMessage());
     $errorMessage = '존재하지 않는 게시글입니다. 목록에서 다시 선택해 주세요.';
@@ -41,6 +44,12 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <?php render_flash(); ?>
+
+        <?php if (!empty($item['image_path'])): ?>
+            <figure class="detail-image">
+                <img src="<?= h($item['image_path']) ?>" alt="<?= h($item['title']) ?> 이미지">
+            </figure>
+        <?php endif; ?>
 
         <dl class="meta-list">
             <div>
@@ -73,6 +82,43 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </form>
     </article>
+
+    <section class="comments-section">
+        <div class="section-header">
+            <h2>댓글</h2>
+            <span><?= count($comments) ?>개</span>
+        </div>
+
+        <?php if (count($comments) === 0): ?>
+            <div class="empty-state">아직 댓글이 없습니다.</div>
+        <?php else: ?>
+            <div class="comment-list">
+                <?php foreach ($comments as $comment): ?>
+                    <article class="comment">
+                        <div class="comment-meta">
+                            <strong><?= h($comment['author_name']) ?></strong>
+                            <time><?= h(format_date($comment['created_at'])) ?></time>
+                        </div>
+                        <p><?= nl2br(h($comment['content'])) ?></p>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <form class="form comment-form" action="/api/comment_action.php" method="post">
+            <input type="hidden" name="item_id" value="<?= (int)$item['id'] ?>">
+
+            <label for="author_name">이름</label>
+            <input id="author_name" name="author_name" type="text" maxlength="100" value="<?= h(old_value($commentOld, 'author_name')) ?>" required>
+
+            <label for="comment_content">댓글 내용</label>
+            <textarea id="comment_content" name="content" rows="4" maxlength="1000" required><?= h(old_value($commentOld, 'content')) ?></textarea>
+
+            <div class="actions">
+                <button class="button button-primary" type="submit">댓글 등록</button>
+            </div>
+        </form>
+    </section>
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

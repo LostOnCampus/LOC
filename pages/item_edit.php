@@ -43,7 +43,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <?php render_flash(); ?>
 
-    <form class="form" action="/api/item_action.php?action=update" method="post">
+    <form class="form" action="/api/item_action.php?action=update" method="post" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
 
         <fieldset class="segmented">
@@ -70,6 +70,17 @@ require_once __DIR__ . '/../includes/header.php';
 
         <label for="contact">연락처</label>
         <input id="contact" name="contact" type="text" maxlength="100" value="<?= h(old_value($old, 'contact', $item['contact'])) ?>" required>
+
+        <?php if (!empty($item['image_path'])): ?>
+            <div class="current-image">
+                <span>현재 이미지</span>
+                <img src="<?= h($item['image_path']) ?>" alt="현재 등록된 물품 이미지">
+            </div>
+        <?php endif; ?>
+
+        <label for="image">새 이미지</label>
+        <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+        <p class="field-help">새 이미지를 선택하면 기존 이미지가 교체됩니다. 3MB 이하 파일만 가능합니다.</p>
 
         <label for="password">수정 비밀번호</label>
         <input id="password" name="password" type="password" required>

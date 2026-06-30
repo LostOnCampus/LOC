@@ -13,6 +13,9 @@ logs/
 tmp/
 sessions/
 cache/
+uploads/items/*
+!uploads/.gitkeep
+!uploads/items/.gitkeep
 
 # Dependencies and build output
 vendor/

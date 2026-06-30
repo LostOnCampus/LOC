@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS lost_items (
     location VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
     contact VARCHAR(100) NOT NULL,
+    image_path VARCHAR(255) NULL,
     edit_password VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -20,6 +21,19 @@ CREATE TABLE IF NOT EXISTS inquiries (
     contact VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS item_comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    item_id INT NOT NULL,
+    author_name VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_item_comments_item
+        FOREIGN KEY (item_id) REFERENCES lost_items(id)
+        ON DELETE CASCADE
 ) ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_unicode_ci;

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <?php render_flash(); ?>
 
-<form class="form" action="/api/item_action.php?action=create" method="post">
+<form class="form" action="/api/item_action.php?action=create" method="post" enctype="multipart/form-data">
     <fieldset class="segmented">
         <legend>유형</legend>
         <label><input type="radio" name="item_type" value="lost" <?= $oldType !== 'found' ? 'checked' : '' ?>> 분실물</label>
@@ -36,6 +36,10 @@ require_once __DIR__ . '/../includes/header.php';
 
     <label for="contact">연락처</label>
     <input id="contact" name="contact" type="text" maxlength="100" value="<?= h(old_value($old, 'contact')) ?>" required>
+
+    <label for="image">이미지</label>
+    <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+    <p class="field-help">선택 사항입니다. JPG, PNG, WEBP, GIF 형식의 3MB 이하 이미지만 업로드할 수 있습니다.</p>
 
     <label for="password">수정·삭제 비밀번호</label>
     <input id="password" name="password" type="password" required>

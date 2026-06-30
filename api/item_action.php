@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $action = query_string('action', 20);
 $data = [];
 $id = 0;
+$imagePath = null;
 
 try {
     if ($action === 'create') {
@@ -28,9 +29,15 @@ try {
             redirect_with_errors('/pages/item_write.php', $errors, $data);
         }
 
+        try {
+            $imagePath = upload_item_image($_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE]);
+        } catch (RuntimeException $uploadError) {
+            redirect_with_errors('/pages/item_write.php', [$uploadError->getMessage()], $data);
+        }
+
         $stmt = get_pdo()->prepare(
-            'INSERT INTO lost_items (item_type, title, location, content, contact, edit_password)
-             VALUES (:item_type, :title, :location, :content, :contact, :edit_password)'
+            'INSERT INTO lost_items (item_type, title, location, content, contact, image_path, edit_password)
+             VALUES (:item_type, :title, :location, :content, :contact, :image_path, :edit_password)'
         );
         $stmt->execute([
             'item_type' => $data['item_type'],
@@ -38,6 +45,7 @@ try {
             'location' => $data['location'],
             'content' => $data['content'],
             'contact' => $data['contact'],
+            'image_path' => $imagePath,
             'edit_password' => password_hash($data['password'], PASSWORD_DEFAULT),
         ]);
 
@@ -69,23 +77,50 @@ try {
             redirect_with_errors('/pages/item_edit.php?id=' . $id, $errors, $data);
         }
 
-        $stmt = get_pdo()->prepare(
-            'UPDATE lost_items
-             SET item_type = :item_type,
-                 title = :title,
-                 location = :location,
-                 content = :content,
-                 contact = :contact
-             WHERE id = :id'
-        );
-        $stmt->execute([
+        try {
+            $imagePath = upload_item_image($_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE]);
+        } catch (RuntimeException $uploadError) {
+            redirect_with_errors('/pages/item_edit.php?id=' . $id, [$uploadError->getMessage()], $data);
+        }
+
+        $params = [
             'id' => $id,
             'item_type' => $data['item_type'],
             'title' => $data['title'],
             'location' => $data['location'],
             'content' => $data['content'],
             'contact' => $data['contact'],
-        ]);
+        ];
+
+        if ($imagePath) {
+            $stmt = get_pdo()->prepare(
+                'UPDATE lost_items
+                 SET item_type = :item_type,
+                     title = :title,
+                     location = :location,
+                     content = :content,
+                     contact = :contact,
+                     image_path = :image_path
+                 WHERE id = :id'
+            );
+            $params['image_path'] = $imagePath;
+        } else {
+            $stmt = get_pdo()->prepare(
+                'UPDATE lost_items
+                 SET item_type = :item_type,
+                     title = :title,
+                     location = :location,
+                     content = :content,
+                     contact = :contact
+                 WHERE id = :id'
+            );
+        }
+
+        $stmt->execute($params);
+
+        if ($imagePath) {
+            delete_item_image($item['image_path'] ?? null);
+        }
 
         redirect_with_success('/pages/item_view.php?id=' . $id, '게시글이 수정되었습니다.');
     }
@@ -109,6 +144,7 @@ try {
 
         $stmt = get_pdo()->prepare('DELETE FROM lost_items WHERE id = :id');
         $stmt->execute(['id' => $id]);
+        delete_item_image($item['image_path'] ?? null);
 
         redirect_with_success('/pages/item_list.php', '게시글이 삭제되었습니다.');
     }
@@ -116,6 +152,7 @@ try {
     redirect_with_errors('/pages/item_list.php', ['잘못된 요청입니다.']);
 } catch (Throwable $e) {
     error_log($e->getMessage());
+    delete_item_image($imagePath);
     if ($action === 'create') {
         redirect_with_errors('/pages/item_write.php', ['서버 오류로 게시글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'], $data);
     }
