@@ -1,0 +1,40 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+config/local.php
+*.pem
+*.key
+*.crt
+
+# Runtime and logs
+*.log
+logs/
+tmp/
+sessions/
+cache/
+
+# Dependencies and build output
+vendor/
+node_modules/
+dist/
+build/
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Codex/local agent metadata
+.codex/
+.agents/
+
+# Large source reference files
+*.pdf
+*.pptx
+
+# Backups
+*.bak
+*.swp
+*~

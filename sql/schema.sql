@@ -1,0 +1,25 @@
+USE lost_on_campus;
+
+CREATE TABLE IF NOT EXISTS lost_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    item_type ENUM('lost', 'found') NOT NULL DEFAULT 'lost',
+    title VARCHAR(200) NOT NULL,
+    location VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    contact VARCHAR(100) NOT NULL,
+    edit_password VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS inquiries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
