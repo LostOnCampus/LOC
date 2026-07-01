@@ -1,5 +1,11 @@
-<FilesMatch "\.(php|phtml|phar)$">
+# uploads/.htaccess
+
+# 이 디렉터리 및 모든 하위 디렉터리에서 PHP 엔진 실행을 비활성화합니다.
+# 이를 통해 .php, .php5, .phtml 등 확장자를 가진 파일이 업로드 되더라도
+# 서버에서 스크립트로 실행되는 것을 원천 차단하여 웹쉘 공격을 방지합니다.
+php_flag engine off
+
+# 만약의 경우를 대비하여, .php 확장자 파일에 대한 직접 접근을 차단하는 규칙을 추가합니다.
+<FilesMatch "\.(php|phtml|php7|phar)$">
     Require all denied
 </FilesMatch>
-
-RemoveHandler .php .phtml .phar

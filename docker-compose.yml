@@ -1,0 +1,25 @@
+# 도커 컴포즈 파일 버전 정의
+version: '3.8'
+
+# 컨테이너 서비스 그룹 정의
+services:
+  # 웹 애플리케이션 서비스 (컨테이너)
+  lost-on-campus-app:
+    container_name: lost-on-campus
+    # 현재 디렉터리의 Dockerfile을 사용하여 이미지를 빌드
+    build: .
+    # 포트 매핑: 호스트의 80번 포트를 컨테이너의 80번 포트로 연결
+    ports:
+      - "80:80"
+    # 볼륨 마운트 설정
+    volumes:
+      # [데이터 보존] 호스트의 ./uploads 디렉터리를 컨테이너의 웹 루트 내 /uploads와 연결합니다.
+      # 이를 통해 사용자가 업로드한 파일이 컨테이너가 재시작되어도 유실되지 않고 호스트에 영구적으로 저장됩니다.
+      - ./uploads:/var/www/html/uploads
+
+      # [환경 변수 보안] 호스트 서버의 /var/www/.env 파일을 컨테이너 내부의 동일 경로로 주입합니다.
+      # Cloud DB for MySQL 접속 정보 등 민감한 정보를 소스 코드와 분리하여 안전하게 관리합니다.
+      # ※ 중요: 이 경로의 .env 파일은 호스트 서버에 미리 생성되어 있어야 합니다.
+      - /var/www/.env:/var/www/.env
+    # 재시작 정책: 컨테이너가 예기치 않게 종료되면, 사용자가 직접 중지하지 않는 한 자동으로 재시작
+    restart: unless-stopped
