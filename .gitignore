@@ -16,6 +16,7 @@ cache/
 uploads/items/*
 !uploads/.gitkeep
 !uploads/items/.gitkeep
+liteLLM_logs/
 
 # Dependencies and build output
 vendor/
